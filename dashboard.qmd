@@ -14,10 +14,39 @@ Placeholder text for column 1
 #| echo: false
 #| include: false
 library(tidyverse)
+library(httr2)
 ```
 
-```{r, printstarwars}
-head(starwars)
+```{r, createaccesstoken}
+#| echo: false
+#| include: false
+client_id <- Sys.getenv("SPOTIFY_CLIENT")
+client_secret <- Sys.getenv("SPOTIFY_SECRET")
+
+req_access_token <- request("https://accounts.spotify.com/api/token") |> 
+  req_method("POST") |> 
+  req_body_raw(paste0(
+    'grant_type=client_credentials&client_id=',
+    client_id,
+    '&client_secret=',
+    client_secret
+  ), 'application/x-www-form-urlencoded') |> 
+  req_perform() |>
+  resp_body_json()
+
+spotify_access_token <- req_access_token$access_token
+```
+
+```{r}
+tth <- request("https://api.spotify.com/v1/playlists/37i9dQZF1DXcBWIGoYBM5M") |> 
+  req_method("GET") |> 
+  req_headers(
+    Authorization = paste0("Bearer ", spotify_access_token),
+  ) |> 
+  req_perform() |>
+  resp_body_json()
+
+tth$tracks$items[[1]]$track$name
 ```
 
 ## Column {width="65%"}
